@@ -2,7 +2,7 @@ import "dotenv/config.js";
 import { Client } from "oceanic.js";
 import { ping } from "./commands/ping";
 import { Command } from "./utils/types";
-import { connectToWS } from "./modules/bridge";
+import { bridgedChannels, connectToWS, sendMessage } from "./modules/bridge";
 
 export const bot = new Client({
     auth: process.env.BOT_AUTH,
@@ -11,7 +11,8 @@ export const bot = new Client({
         repliedUser: false,
         everyone: false,
         roles: false
-    }
+    },
+    gateway: { intents: ["ALL"] }
 });
 
 const commands = [ping];
@@ -79,6 +80,9 @@ bot.on("messageCreate", async (e) => {
                   })()
         );
     }
+    if (!bridgedChannels.includes(e.channel.id)) return;
+    if (e.author.bot) return;
+    sendMessage(e.content, true, e.author.tag);
 });
 
 bot.connect();

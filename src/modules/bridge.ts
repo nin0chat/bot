@@ -4,6 +4,8 @@ import { IncomingPayload } from "../utils/types";
 
 let ws: WebSocket;
 
+export const bridgedChannels = ["1298338838930001981", "1298664849814851594"];
+
 export function connectToWS() {
     console.log("Connecting to nin0chat");
     ws = new WebSocket("wss://chatws.nin0.dev");
@@ -30,9 +32,12 @@ export function connectToWS() {
                     !(message.d.userInfo.roles & Role.Admin)
                 )
                     return;
-                bot.rest.channels.createMessage("1298338838930001981", {
-                    content: `\` ${getRoleEmoji(message.d.userInfo.roles)} \` **<${message.d.userInfo.username}>** ${message.d.content}`
-                });
+                for (const c of bridgedChannels) {
+                    if (message.d.userInfo.bridgeMetadata.from === "nin0bot") return;
+                    bot.rest.channels.createMessage(c, {
+                        content: `\` ${getRoleEmoji(message.d.userInfo.roles)} \` **<${message.d.userInfo.username}>** ${message.d.content}`
+                    });
+                }
                 break;
             }
             case 1: {
@@ -54,6 +59,23 @@ function sendPayload(op: number, d: any) {
             d
         })
     );
+}
+
+export function sendMessage(
+    content: string,
+    bridge: boolean = false,
+    username: string = "",
+    color: string = ""
+) {
+    sendPayload(0, {
+        content,
+        bridgeMetadata: bridge
+            ? {
+                  username,
+                  from: "nin0bot"
+              }
+            : {}
+    });
 }
 
 function getRoleEmoji(roles: number): string {
