@@ -2,9 +2,12 @@
     "name": "bot",
     "main": "dist/index.js",
     "dependencies": {
+        "@types/pg": "^8.11.10",
         "dotenv": "^16.4.5",
         "nodemon": "^3.1.7",
         "oceanic.js": "^1.11.2",
+        "pg": "^8.13.0",
+        "pg-ipc": "^1.0.5",
         "prettier": "^3.3.3",
         "ts-node": "^10.9.2",
         "typescript": "^5.6.3"

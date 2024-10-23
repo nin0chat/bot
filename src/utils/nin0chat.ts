@@ -18,12 +18,10 @@ export function sendMessage(
 ) {
     sendPayload(0, {
         content,
-        bridgeMetadata: bridge
-            ? {
-                  username,
-                  color,
-                  from: `nin0chatbot, from ${fromName}`
-              }
-            : {}
+        bridgeMetadata: bridge && {
+            username,
+            color,
+            from: `nin0chatbot, from ${fromName}`
+        }
     });
 }

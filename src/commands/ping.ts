@@ -2,14 +2,8 @@ import { CreateMessageOptions, Message } from "oceanic.js";
 import { bot } from "..";
 import { Command } from "../utils/types";
 
-function handler(ctx: Message, args: string[]): string | CreateMessageOptions {
-    return {
-        embeds: [
-            {
-                description: "pong"
-            }
-        ]
-    };
+function handler(ctx: Message | any, args: string[]): string | CreateMessageOptions {
+    return "Pong!";
 }
 
 export const ping: Command = {
@@ -17,6 +11,7 @@ export const ping: Command = {
     description: "pong",
     permission: "anyone",
     usage: "ping",
+    platform: "any",
     aliases: ["p"],
     handler
 };

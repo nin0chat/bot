@@ -4,6 +4,11 @@ import { ping } from "./commands/ping";
 import { Command, IncomingPayload } from "./utils/types";
 import { bridgedChannels, handleIncomingMessage, setLastBridgedChannel } from "./modules/bridge";
 import { sendMessage, sendPayload } from "./utils/nin0chat";
+import { handleNin0ChatCommand } from "./modules/chatCommandHandler";
+import { initIPC, ipc } from "./utils/ipc";
+import { kill } from "./commands/kill";
+
+export const commands = [kill, ping];
 
 export const bot = new Client({
     auth: process.env.BOT_AUTH,
@@ -19,6 +24,7 @@ export let ws: WebSocket;
 export function connectToWS() {
     console.log("Connecting to nin0chat");
     ws = new WebSocket("wss://chatws.nin0.dev");
+    //ws = new WebSocket("ws://localhost:8928");
     ws.onopen = () => {
         console.log("Connected to nin0chat, authenticating");
         sendPayload(1, {
@@ -36,6 +42,7 @@ export function connectToWS() {
             }
             case 0: {
                 handleIncomingMessage(message);
+                handleNin0ChatCommand(message.d.content, message.d.userInfo);
                 break;
             }
             case 1: {
@@ -49,8 +56,6 @@ export function connectToWS() {
         }
     };
 }
-
-const commands = [ping];
 
 bot.on("ready", () => {
     console.log(`Connected as ${bot.user.tag}!`);
@@ -73,6 +78,7 @@ bot.on("messageCreate", async (e) => {
             }
         }
         if (!targetCommand) return;
+        if (targetCommand.platform === "nin0chat") return;
         switch (targetCommand.permission) {
             case "anyone": {
                 break;
@@ -134,5 +140,16 @@ bot.on("messageCreate", async (e) => {
         `${e.guild.name} (${e.channel.id})`
     );
 });
+
+process.on("uncaughtException", (e) => {
+    connectToWS();
+    console.error(e);
+});
+
+process.on("unhandledRejection", (e) => {
+    console.error(e);
+});
+
+initIPC();
 
 bot.connect();
