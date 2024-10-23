@@ -1,8 +1,9 @@
 import "dotenv/config.js";
 import { Client } from "oceanic.js";
 import { ping } from "./commands/ping";
-import { Command } from "./utils/types";
-import { bridgedChannels, connectToWS, sendMessage } from "./modules/bridge";
+import { Command, IncomingPayload } from "./utils/types";
+import { bridgedChannels, handleIncomingMessage, setLastBridgedChannel } from "./modules/bridge";
+import { sendMessage, sendPayload } from "./utils/nin0chat";
 
 export const bot = new Client({
     auth: process.env.BOT_AUTH,
@@ -14,6 +15,40 @@ export const bot = new Client({
     },
     gateway: { intents: ["ALL"] }
 });
+export let ws: WebSocket;
+export function connectToWS() {
+    console.log("Connecting to nin0chat");
+    ws = new WebSocket("wss://chatws.nin0.dev");
+    ws.onopen = () => {
+        console.log("Connected to nin0chat, authenticating");
+        sendPayload(1, {
+            anon: false,
+            token: process.env.WS_TOKEN,
+            device: "bot"
+        });
+    };
+    ws.onclose = connectToWS;
+    ws.onmessage = (msg) => {
+        const message: IncomingPayload = JSON.parse(msg.data);
+        switch (message.op) {
+            case -1: {
+                console.error(message.d);
+            }
+            case 0: {
+                handleIncomingMessage(message);
+                break;
+            }
+            case 1: {
+                console.log("Authenticated to nin0chat!");
+                break;
+            }
+            case 2: {
+                sendPayload(2, {});
+                break;
+            }
+        }
+    };
+}
 
 const commands = [ping];
 
@@ -80,9 +115,24 @@ bot.on("messageCreate", async (e) => {
                   })()
         );
     }
-    if (!bridgedChannels.includes(e.channel.id)) return;
+    let canContinue = false;
+    for (const channel of bridgedChannels) {
+        if (channel.channelID === e.channel.id) canContinue = true;
+    }
+    if (!canContinue) return;
     if (e.author.bot) return;
-    sendMessage(e.content, true, e.author.tag);
+    const member = await bot.rest.guilds.getMember(e.guild.id, e.author.id);
+    const topRole =
+        member.roles.length > 0
+            ? await bot.rest.guilds.getRole(e.guild!.id, member.roles.at(-1)!)
+            : undefined;
+    sendMessage(
+        e.content,
+        true,
+        e.author.tag,
+        topRole ? topRole.color!.toString(16) : "0",
+        `${e.guild.name} (${e.channel.id})`
+    );
 });
 
 bot.connect();

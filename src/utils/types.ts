@@ -17,6 +17,7 @@ export type Command = {
     aliases?: string[];
     permission: "anyone" | "mod" | "team";
     usage: string;
+    platform: "nin0chat" | "discord" | "any";
     handler: CommandHandler;
 };
 
