@@ -7,8 +7,9 @@ import { sendMessage, sendPayload } from "./utils/nin0chat";
 import { handleNin0ChatCommand } from "./modules/chatCommandHandler";
 import { initIPC, ipc } from "./utils/ipc";
 import { kill } from "./commands/kill";
+import { help } from "./commands/help";
 
-export const commands = [kill, ping];
+export const commands = [help, kill, ping];
 
 export const bot = new Client({
     auth: process.env.BOT_AUTH,
