@@ -23,7 +23,7 @@ export const bot = new Client({
         everyone: false,
         roles: false
     },
-    gateway: { intents: ["ALL"] }
+    gateway: { intents: ["MESSAGE_CONTENT", "GUILD_MESSAGES"] }
 });
 export let ws: WebSocket;
 export function connectToWS() {
