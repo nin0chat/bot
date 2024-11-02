@@ -1,5 +1,5 @@
 import "dotenv/config.js";
-import { ButtonStyles, Client, ComponentTypes } from "oceanic.js";
+import { ActivityTypes, ButtonStyles, Client, ComponentTypes } from "oceanic.js";
 import { ping } from "./commands/ping";
 import { Command, IncomingPayload } from "./utils/types";
 import { bridgedChannels, handleIncomingMessage, setLastBridgedChannel } from "./modules/bridge";
@@ -73,6 +73,15 @@ bot.on("ready", async () => {
         });
     });
     console.log("Loaded channels:", bridgedChannels);
+});
+bot.once("ready", async () => {
+    await bot.editStatus("online", [
+        {
+            type: ActivityTypes.CUSTOM,
+            name: "@ for info ~ https://chat.nin0.dev",
+            state: "@ for info ~ https://chat.nin0.dev"
+        }
+    ]);
 });
 
 bot.on("messageCreate", async (e) => {
