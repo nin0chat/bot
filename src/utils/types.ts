@@ -1,6 +1,6 @@
 import { CreateMessageOptions, Message } from "oceanic.js";
 
-type CommandHandler = (ctx: Message, args: string[]) => string | CreateMessageOptions;
+type CommandHandler = (ctx: Message, args: string[]) => Promise<string | CreateMessageOptions>;
 
 export enum Role {
     Guest = 1 << 0,

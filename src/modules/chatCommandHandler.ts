@@ -35,7 +35,7 @@ export async function handleNin0ChatCommand(content: string, author: any) {
             }
         }
         commandString.shift();
-        const thingToReplyTo = targetCommand.handler(author, commandString);
+        const thingToReplyTo = await targetCommand.handler(author, commandString);
         sendMessage(thingToReplyTo as string);
     }
 }

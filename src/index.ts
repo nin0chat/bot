@@ -1,5 +1,5 @@
 import "dotenv/config.js";
-import { Client } from "oceanic.js";
+import { ButtonStyles, Client, ComponentTypes } from "oceanic.js";
 import { ping } from "./commands/ping";
 import { Command, IncomingPayload } from "./utils/types";
 import { bridgedChannels, handleIncomingMessage, setLastBridgedChannel } from "./modules/bridge";
@@ -8,8 +8,12 @@ import { handleNin0ChatCommand } from "./modules/chatCommandHandler";
 import { initIPC, ipc } from "./utils/ipc";
 import { kill } from "./commands/kill";
 import { help } from "./commands/help";
+import { sql } from "./commands/sql";
+import { restart } from "./commands/restart";
+import { psqlClient } from "./utils/database";
+import { bridge, unbridge } from "./commands/bridgeManagement";
 
-export const commands = [help, kill, ping];
+export const commands = [bridge, help, kill, ping, restart, sql, unbridge];
 
 export const bot = new Client({
     auth: process.env.BOT_AUTH,
@@ -58,12 +62,55 @@ export function connectToWS() {
     };
 }
 
-bot.on("ready", () => {
+bot.on("ready", async () => {
     console.log(`Connected as ${bot.user.tag}!`);
     connectToWS();
+    const channels = await psqlClient.query("SELECT * FROM botguilds");
+    channels.rows.forEach((c) => {
+        bridgedChannels.push({
+            guildID: c.guild_id,
+            channelID: c.channel_id
+        });
+    });
+    console.log("Loaded channels:", bridgedChannels);
 });
 
 bot.on("messageCreate", async (e) => {
+    if (e.content.replace(" ", "") === `<@${bot.user.id}>`)
+        await e.channel.createMessage({
+            embeds: [
+                {
+                    title: "nin0chat",
+                    description:
+                        "The chat app of all time, on Discord. `@nin0chatbot help` to see all commands.\n\n**Would like to add this channel to the bridge?**\nRun `@nin0chatbot bridge` to add the channel, or `@nin0chatbot unbridge` to remove it.\n*You need to own the server to do this.*",
+                    color: 4431352
+                }
+            ],
+            components: [
+                {
+                    type: ComponentTypes.ACTION_ROW,
+                    components: [
+                        {
+                            type: ComponentTypes.BUTTON,
+                            style: ButtonStyles.LINK,
+                            label: "Open nin0chat",
+                            url: "https://chat.nin0.dev"
+                        },
+                        {
+                            type: ComponentTypes.BUTTON,
+                            style: ButtonStyles.LINK,
+                            label: "Support/community server",
+                            url: "https://discord.gg/8kUQNnSuxy"
+                        }
+                    ]
+                }
+            ],
+            messageReference: {
+                messageID: e.id,
+                channelID: e.channelID,
+                guildID: e.guildID
+            }
+        });
     if (e.content.startsWith(`<@${bot.user.id}> `)) {
         const commandString = e.content.substring(`<@${bot.user.id}> `.length).split(" ");
         let targetCommand: Command;
@@ -100,27 +147,33 @@ bot.on("messageCreate", async (e) => {
             }
         }
         commandString.shift();
-        const thingToReplyTo = targetCommand.handler(e, commandString);
-        await e.channel.createMessage(
-            typeof thingToReplyTo === "string"
-                ? {
-                      content: thingToReplyTo,
-                      messageReference: {
-                          messageID: e.id,
-                          channelID: e.channel.id,
-                          guildID: e.guild.id
+        const thingToReplyTo = await targetCommand.handler(e, commandString);
+        try {
+            await e.channel.createMessage(
+                typeof thingToReplyTo === "string"
+                    ? {
+                          content: thingToReplyTo,
+                          messageReference: {
+                              messageID: e.id,
+                              channelID: e.channel.id,
+                              guildID: e.guild.id
+                          }
                       }
-                  }
-                : (() => {
-                      const obj = thingToReplyTo;
-                      obj.messageReference = {
-                          messageID: e.id,
-                          channelID: e.channel.id,
-                          guildID: e.guild.id
-                      };
-                      return obj;
-                  })()
-        );
+                    : (() => {
+                          const obj = thingToReplyTo;
+                          obj.messageReference = {
+                              messageID: e.id,
+                              channelID: e.channel.id,
+                              guildID: e.guild.id
+                          };
+                          return obj;
+                      })()
+            );
+        } catch {
+            await e.channel.createMessage({
+                content: "This command can only be used in servers"
+            });
+        }
     }
     let canContinue = false;
     for (const channel of bridgedChannels) {

@@ -2,13 +2,7 @@ import { bot, ws } from "..";
 import { Role } from "../utils/types";
 import { IncomingPayload } from "../utils/types";
 
-export const bridgedChannels = [
-    {
-        channelID: "1298338838930001981",
-        guildID: "1298332865939116104"
-    },
-    { channelID: "1298664849814851594", guildID: "1245478730625974414" }
-];
+export const bridgedChannels: { channelID: string; guildID: string }[] = [];
 
 let lastBridgedChannel = "";
 

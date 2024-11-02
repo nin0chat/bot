@@ -3,7 +3,7 @@ import { bot } from "..";
 import { Command } from "../utils/types";
 import { ipc } from "../utils/ipc";
 
-function handler(ctx: Message | any, args: string[]): string | CreateMessageOptions {
+async function handler(ctx: Message | any, args: string[]): Promise<string | CreateMessageOptions> {
     ipc.notify("kill", {
         target: args[0]
     });
