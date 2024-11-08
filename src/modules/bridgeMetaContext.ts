@@ -1,4 +1,4 @@
-import { ApplicationCommandTypes, InteractionTypes } from "oceanic.js";
+import { ApplicationCommandTypes, InteractionTypes, MessageFlags } from "oceanic.js";
 import { bot } from "..";
 
 export let messageMetaMap: Map<
@@ -16,10 +16,9 @@ export async function setupInteractionListeners() {
             i.type === InteractionTypes.APPLICATION_COMMAND &&
             i.data.type === ApplicationCommandTypes.MESSAGE &&
             i.data.name === "View Message Info"
-        ) {
-            await i.defer();
+        ) {-
             if (messageMetaMap.has(i.data.target.id))
-                await i.createFollowup({
+                await i.createMessage({
                     embeds: [
                         {
                             title: "Message info",
@@ -30,6 +29,10 @@ ${messageMetaMap.get(i.data.target.id).bridgeMeta !== null ? `> **Bridged via**:
                         }
                     ]
                 });
+            else await i.createMessage({
+                content: "Message info isn't available for this message.",
+                flags: MessageFlags.EPHEMERAL
+            })
         }
     });
 }
