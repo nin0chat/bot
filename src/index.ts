@@ -1,5 +1,11 @@
 import "dotenv/config.js";
-import { ActivityTypes, ButtonStyles, Client, ComponentTypes } from "oceanic.js";
+import {
+    ActivityTypes,
+    ApplicationCommandTypes,
+    ButtonStyles,
+    Client,
+    ComponentTypes
+} from "oceanic.js";
 import { ping } from "./commands/ping";
 import { Command, IncomingPayload } from "./utils/types";
 import { bridgedChannels, handleIncomingMessage, setLastBridgedChannel } from "./modules/bridge";
@@ -13,6 +19,7 @@ import { restart } from "./commands/restart";
 import { psqlClient } from "./utils/database";
 import { bridge, unbridge } from "./commands/bridgeManagement";
 import { configAuditLoggers } from "./modules/auditLogging";
+import { setupInteractionListeners } from "./modules/bridgeMetaContext";
 
 export const commands = [bridge, help, kill, ping, restart, sql, unbridge];
 
@@ -85,6 +92,13 @@ bot.on("ready", async () => {
 });
 bot.once("ready", async () => {
     await configAuditLoggers();
+    await setupInteractionListeners();
+    await bot.application.bulkEditGlobalCommands([
+        {
+            type: ApplicationCommandTypes.MESSAGE,
+            name: "View Message Info"
+        }
+    ]);
     await bot.editStatus("online", [
         {
             type: ActivityTypes.CUSTOM,

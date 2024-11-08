@@ -1,6 +1,7 @@
 import { bot, ws } from "..";
 import { Role } from "../utils/types";
 import { IncomingPayload } from "../utils/types";
+import { messageMetaMap } from "./bridgeMetaContext";
 
 export const bridgedChannels: { channelID: string; guildID: string }[] = [];
 
@@ -16,13 +17,24 @@ export async function handleIncomingMessage(message: IncomingPayload) {
 
     for (const c of bridgedChannels) {
         try {
-            if (!(message.d.userInfo.bridgeMetadata.from as string).includes(c.channelID))
-                bot.rest.channels.createMessage(c.channelID, {
-                    content: `-# \`${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`}\` **<${message.d.userInfo.username}>**${message.d.type === 4 ? ` (via ${message.d.userInfo.bridgeMetadata.from})` : ""}\n${message.d.content.replace("-#", "\\-#")}`
+            if (!(message.d.userInfo.bridgeMetadata.from as string).includes(c.channelID)) {
+                const m = await bot.rest.channels.createMessage(c.channelID, {
+                    content: `-# \`${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`}\` **<${message.d.userInfo.username}>**\n${message.d.content.replace("-#", "\\-#")}`
                 });
+                messageMetaMap.set(m.id, {
+                    messageID: message.d.id,
+                    userID: message.d.userInfo.id,
+                    bridgeMeta: message.d.type === 4 ? message.d.userInfo.bridgeMetadata.from : null
+                });
+            }
         } catch {
-            bot.rest.channels.createMessage(c.channelID, {
-                content: `-# \`${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`}\` **<${message.d.userInfo.username}>**${message.d.type === 4 ? ` (via ${message.d.userInfo.bridgeMetadata.from})` : ""}\n${message.d.content.replace("-#", "\\-#")}`
+            const m = await bot.rest.channels.createMessage(c.channelID, {
+                content: `-# \`${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`}\` **<${message.d.userInfo.username}>**\n${message.d.content.replace("-#", "\\-#")}`
+            });
+            messageMetaMap.set(m.id, {
+                messageID: message.d.id,
+                userID: message.d.userInfo.id,
+                bridgeMeta: message.d.type === 4 ? message.d.userInfo.bridgeMetadata.from : null
             });
         }
     }
