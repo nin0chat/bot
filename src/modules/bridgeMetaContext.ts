@@ -16,7 +16,7 @@ export async function setupInteractionListeners() {
             i.type === InteractionTypes.APPLICATION_COMMAND &&
             i.data.type === ApplicationCommandTypes.MESSAGE &&
             i.data.name === "View Message Info"
-        ) {-
+        ) {
             if (messageMetaMap.has(i.data.target.id))
                 await i.createMessage({
                     embeds: [
@@ -29,10 +29,11 @@ ${messageMetaMap.get(i.data.target.id).bridgeMeta !== null ? `> **Bridged via**:
                         }
                     ]
                 });
-            else await i.createMessage({
-                content: "Message info isn't available for this message.",
-                flags: MessageFlags.EPHEMERAL
-            })
+            else
+                await i.createMessage({
+                    content: "Message info isn't available for this message.",
+                    flags: MessageFlags.EPHEMERAL
+                });
         }
     });
 }
