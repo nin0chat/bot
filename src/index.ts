@@ -12,6 +12,7 @@ import { sql } from "./commands/sql";
 import { restart } from "./commands/restart";
 import { psqlClient } from "./utils/database";
 import { bridge, unbridge } from "./commands/bridgeManagement";
+import { configAuditLoggers } from "./modules/auditLogging";
 
 export const commands = [bridge, help, kill, ping, restart, sql, unbridge];
 
@@ -23,7 +24,15 @@ export const bot = new Client({
         everyone: false,
         roles: false
     },
-    gateway: { intents: ["MESSAGE_CONTENT", "GUILD_MESSAGES"] }
+    gateway: {
+        intents: [
+            "MESSAGE_CONTENT",
+            "GUILD_MESSAGES",
+            "GUILDS",
+            "DIRECT_MESSAGES",
+            "GUILD_MESSAGE_TYPING"
+        ]
+    }
 });
 export let ws: WebSocket;
 export function connectToWS() {
@@ -75,6 +84,7 @@ bot.on("ready", async () => {
     console.log("Loaded channels:", bridgedChannels);
 });
 bot.once("ready", async () => {
+    await configAuditLoggers();
     await bot.editStatus("online", [
         {
             type: ActivityTypes.CUSTOM,
@@ -91,7 +101,7 @@ bot.on("messageCreate", async (e) => {
                 {
                     title: "nin0chat",
                     description:
-                        "The chat app of all time, on Discord. `@nin0chatbot help` to see all commands.\n\n**Would like to add this channel to the bridge?**\nRun `@nin0chatbot bridge` to add the channel, or `@nin0chatbot unbridge` to remove it.\n*You need to own the server to do this.*",
+                        "The chat app of all time, on Discord. `@nin0chat help` to see all commands.\n\n**Would like to add this channel to the bridge?**\nRun `@nin0chat bridge` to add the channel, or `@nin0chat unbridge` to remove it.\n*You need to own the server to do this.*",
                     color: 4431352
                 }
             ],
@@ -186,7 +196,9 @@ bot.on("messageCreate", async (e) => {
     }
     let canContinue = false;
     for (const channel of bridgedChannels) {
-        if (channel.channelID === e.channel.id) canContinue = true;
+        try {
+            if (channel.channelID === e.channel.id) canContinue = true;
+        } catch {} // blobcatcozy
     }
     if (!canContinue) return;
     if (e.author.bot) return;

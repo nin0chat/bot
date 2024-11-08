@@ -18,11 +18,11 @@ export async function handleIncomingMessage(message: IncomingPayload) {
         try {
             if (!(message.d.userInfo.bridgeMetadata.from as string).includes(c.channelID))
                 bot.rest.channels.createMessage(c.channelID, {
-                    content: `\` ${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`} \` **<${message.d.userInfo.username}>** ${message.d.content}\n${message.d.type === 4 ? `-# Bridged by ${message.d.userInfo.bridgeMetadata.from}` : ""}`
+                    content: `-# \`${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`}\` **<${message.d.userInfo.username}>**${message.d.type === 4 ? ` (via ${message.d.userInfo.bridgeMetadata.from})` : ""}\n${message.d.content.replace("-#", "\\-#")}`
                 });
         } catch {
             bot.rest.channels.createMessage(c.channelID, {
-                content: `\` ${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`} \` **<${message.d.userInfo.username}>** ${message.d.content}\n${message.d.type === 4 ? `-# Bridged by ${message.d.userInfo.bridgeMetadata.from}` : ""}`
+                content: `-# \`${message.d.type !== 4 ? getRoleEmoji(message.d.userInfo.roles) : `🌉`}\` **<${message.d.userInfo.username}>**${message.d.type === 4 ? ` (via ${message.d.userInfo.bridgeMetadata.from})` : ""}\n${message.d.content.replace("-#", "\\-#")}`
             });
         }
     }
