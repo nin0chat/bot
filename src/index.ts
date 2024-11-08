@@ -54,7 +54,9 @@ export function connectToWS() {
             device: "bot"
         });
     };
-    ws.onclose = connectToWS;
+    ws.onclose = () => {
+        process.exit(1);
+    };
     ws.onmessage = (msg) => {
         const message: IncomingPayload = JSON.parse(msg.data);
         switch (message.op) {
