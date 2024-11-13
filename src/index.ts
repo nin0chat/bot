@@ -219,6 +219,13 @@ bot.on("messageCreate", async (e) => {
     if (!canContinue) return;
     if (e.author.bot) return;
     const member = await bot.rest.guilds.getMember(e.guild.id, e.author.id);
+    if (e.author.id === "885157323880935474") { // autistic.kid
+    	await e.createReaction("blacklistedFromBridge:1306049840610017290");
+    	setTimeout(() => {
+    		e.deleteReaction("blacklistedFromBridge:1306049840610017290", "@me");
+    	}, 2000);
+    	return;
+    }
     const topRole =
         member.roles.length > 0
             ? await bot.rest.guilds.getRole(e.guild!.id, member.roles.at(-1)!)
